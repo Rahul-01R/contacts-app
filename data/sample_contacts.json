@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Asha Verma",
+    "phone": "+91 98765 43210",
+    "email": "asha@example.com",
+    "address": "12 MG Road, Pune"
+  },
+  {
+    "id": 2,
+    "name": "Ravi Sharma",
+    "phone": "9123456780",
+    "email": "ravi.sharma@example.com",
+    "address": "45 Park Street, Kolkata"
+  },
+  {
+    "id": 3,
+    "name": "Priya Nair",
+    "phone": "098111-22233",
+    "email": "priya@example.com",
+    "address": "8 Residency Road, Bengaluru"
+  },
+  {
+    "id": 4,
+    "name": "Kabir Khan",
+    "phone": "+91 99887 76655",
+    "email": "",
+    "address": "21 Marine Drive, Mumbai"
+  },
+  {
+    "id": 5,
+    "name": "Neha Gupta",
+    "phone": "9000011111",
+    "email": "neha.g@example.com",
+    "address": ""
+  }
+]
