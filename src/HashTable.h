@@ -41,3 +41,55 @@ std::size_t HashTable<V>::hashString(const std::string& s) {
     }
     return h;
 }
+
+template <typename V>
+HashTable<V>::HashTable() : buckets_(53) {}
+
+template <typename V>
+std::size_t HashTable<V>::indexFor(const std::string& key) const {
+    return hashString(key) % buckets_.size();
+}
+
+template <typename V>
+bool HashTable<V>::insert(const std::string& key, const V& value) {
+    std::size_t i = indexFor(key);              // 1. which bucket?
+    for (const Entry& e : buckets_[i]) {        // 2. walk that bucket's list
+        if (e.key == key) {
+            return false;                       //    key already there: refuse
+        }
+    }
+    buckets_[i].push_back(Entry{key, value});   // 3. add to the end of the list
+    size_++;                                    // 4. one more item in the table
+    return true;
+}
+template <typename V>
+V* HashTable<V>::find(const std::string& key) {
+    std::size_t i = indexFor(key);
+    for (Entry& e : buckets_[i]) {
+        if (e.key == key) {
+            return &e.value;        // address of the value
+        }
+    }
+    return nullptr;                 // not found
+}
+
+template <typename V>
+const V* HashTable<V>::find(const std::string& key) const {
+    std::size_t i = indexFor(key);
+    for (const Entry& e : buckets_[i]) {
+        if (e.key == key) {
+            return &e.value;
+        }
+    }
+    return nullptr;
+}
+template <typename V>
+std::size_t HashTable<V>::size() const { return size_; }
+
+template <typename V>
+std::size_t HashTable<V>::capacity() const { return buckets_.size(); }
+
+template <typename V>
+double HashTable<V>::loadFactor() const {
+    return static_cast<double>(size_) / static_cast<double>(buckets_.size());
+}
