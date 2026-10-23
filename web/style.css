@@ -1,0 +1,94 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 20px;
+    color: #222;
+}
+
+.container {
+    max-width: 700px;
+    margin: 20px auto;
+}
+
+h1 {
+    text-align: center;
+    color: #243b55;
+}
+
+.toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#search {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#addContact {
+    background-color: #2563eb;
+    color: white;
+}
+
+.contact-card {
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px #ddd;
+}
+
+.contact-card h2 {
+    color: #243b55;
+}
+
+.contact-card p {
+    margin: 10px 0;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.edit-btn {
+    background-color: #16a34a;
+    color: white;
+}
+
+.share-btn {
+    background-color: #7c3aed;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #dc2626;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+@media (max-width: 480px) {
+    .toolbar {
+        flex-direction: column;
+    }
+
+    .actions {
+        flex-wrap: wrap;
+    }
+}
