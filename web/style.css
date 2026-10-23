@@ -14,6 +14,7 @@ body {
 h1 {
     text-align: center;
     color: #243b55;
+    margin-bottom: 25px;
 }
 
 .toolbar {
@@ -27,6 +28,7 @@ h1 {
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 6px;
+    font-size: 15px;
 }
 
 button {
@@ -34,6 +36,7 @@ button {
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-size: 14px;
 }
 
 #addContact {
@@ -47,10 +50,11 @@ button {
     border: 1px solid #ddd;
     border-radius: 10px;
     margin-bottom: 15px;
-    box-shadow: 0 2px 5px #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
 .contact-card h2 {
+    margin-top: 0;
     color: #243b55;
 }
 
@@ -81,6 +85,25 @@ button {
 
 button:hover {
     opacity: 0.85;
+}
+
+.contacts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.initials {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background-color: #dce8ff;
+    color: #244a91;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
 }
 
 @media (max-width: 480px) {
