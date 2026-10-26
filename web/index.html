@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Contacts App</title>
@@ -12,28 +13,183 @@
 
 <body>
 
-    <div class="container">
+    <main class="app-container">
 
-        <h1>Contacts App</h1>
+        <header class="app-header">
 
-        <div class="toolbar">
+            <div>
+                <h1>My Contacts</h1>
+                <p>Manage your contacts easily</p>
+            </div>
 
-            <input
-                type="text"
-                id="search"
-                placeholder="Search contacts..."
-            >
-
-            <button id="addContact">
+            <button type="button" id="addContact">
                 + Add Contact
             </button>
 
-        </div>
+        </header>
 
-        <!-- JavaScript will generate all contact cards here -->
-        <section id="contacts-container" class="contacts-grid"></section>
 
-    </div>
+        <section class="toolbar">
+
+            <input
+                type="search"
+                id="search"
+                placeholder="Search contacts..."
+                aria-label="Search contacts"
+            >
+
+        </section>
+
+
+        <section
+            id="contacts-container"
+            class="contacts-grid"
+            aria-live="polite"
+        ></section>
+
+
+        <!-- Add/Edit Contact Dialog -->
+
+        <dialog id="contactDialog">
+
+            <div class="dialog-header">
+
+                <h2 id="dialogTitle">Add Contact</h2>
+
+                <button
+                    type="button"
+                    id="closeDialog"
+                    class="close-button"
+                    aria-label="Close dialog"
+                >
+                    &times;
+                </button>
+
+            </div>
+
+
+            <form id="contactForm" novalidate>
+
+                <input type="hidden" id="contactId">
+
+
+                <!-- Name -->
+
+                <div class="form-group">
+
+                    <label for="name">Full Name *</label>
+
+                    <input
+                        type="text"
+                        id="name"
+                        placeholder="Enter full name"
+                        autocomplete="name"
+                        aria-describedby="nameError"
+                    >
+
+                    <small
+                        class="error-message"
+                        id="nameError"
+                    ></small>
+
+                </div>
+
+
+                <!-- Phone -->
+
+                <div class="form-group">
+
+                    <label for="phone">Phone Number *</label>
+
+                    <input
+                        type="tel"
+                        id="phone"
+                        placeholder="Enter phone number"
+                        autocomplete="tel"
+                        aria-describedby="phoneError"
+                    >
+
+                    <small
+                        class="error-message"
+                        id="phoneError"
+                    ></small>
+
+                </div>
+
+
+                <!-- Email -->
+
+                <div class="form-group">
+
+                    <label for="email">Email Address</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Enter email address"
+                        autocomplete="email"
+                        aria-describedby="emailError"
+                    >
+
+                    <small
+                        class="error-message"
+                        id="emailError"
+                    ></small>
+
+                </div>
+
+
+                <!-- Address -->
+
+                <div class="form-group">
+
+                    <label for="address">Address</label>
+
+                    <textarea
+                        id="address"
+                        rows="3"
+                        placeholder="Enter address"
+                        autocomplete="street-address"
+                        aria-describedby="addressError"
+                    ></textarea>
+
+                    <small
+                        class="error-message"
+                        id="addressError"
+                    ></small>
+
+                </div>
+
+
+                <!-- Form Buttons -->
+
+                <div class="form-actions">
+
+                    <button
+                        type="button"
+                        id="cancelContact"
+                        class="cancel-button"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="saveContact"
+                    >
+                        Save Contact
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+    </main>
+
+
+    <!-- Load the API before the application code -->
 
     <script src="api.js"></script>
     <script src="app.js"></script>
