@@ -1,5 +1,3 @@
-// Mock contact data
-
 let contacts = [
     {
         id: 1,
@@ -38,71 +36,116 @@ let contacts = [
     }
 ];
 
-
-// Generate the next contact ID
-
-let nextId = Math.max(0, ...contacts.map(contact => contact.id)) + 1;
-
-
-// READ: Get all contacts
-
-async function getContacts() {
-    return contacts.map(contact => ({ ...contact }));
+function success(data, status = 200) {
+    return {
+        ok: true,
+        status: status,
+        data: data
+    };
 }
 
+function failure(status, message) {
+    return {
+        ok: false,
+        status: status,
+        data: {
+            message: message
+        }
+    };
+}
 
-// CREATE: Add a contact
+function getContacts() {
+    return Promise.resolve(success([...contacts]));
+}
 
-async function createContact(contactData) {
+function addContact(contact) {
+    const phone = String(contact.phone || "").trim();
+
+    if (!contact.name || !phone) {
+        return Promise.resolve(
+            failure(400, "Name and phone number are required.")
+        );
+    }
+
+    const duplicate = contacts.some(
+        item => item.phone === phone
+    );
+
+    if (duplicate) {
+        return Promise.resolve(
+            failure(409, "A contact with this phone number already exists.")
+        );
+    }
+
     const newContact = {
-        id: nextId++,
-        name: contactData.name,
-        phone: contactData.phone,
-        email: contactData.email,
-        address: contactData.address
+        id: Date.now(),
+        name: contact.name.trim(),
+        phone: phone,
+        email: (contact.email || "").trim(),
+        address: (contact.address || "").trim()
     };
 
     contacts.push(newContact);
 
-    return { ...newContact };
+    return Promise.resolve(success(newContact, 201));
 }
 
-
-// UPDATE: Edit a contact
-
-async function updateContact(id, updatedData) {
+function updateContact(id, updatedContact) {
     const index = contacts.findIndex(
         contact => contact.id === Number(id)
     );
 
     if (index === -1) {
-        throw new Error("Contact not found.");
+        return Promise.resolve(
+            failure(404, "Contact not found.")
+        );
+    }
+
+    const phone = String(updatedContact.phone || "").trim();
+
+    if (!updatedContact.name || !phone) {
+        return Promise.resolve(
+            failure(400, "Name and phone number are required.")
+        );
+    }
+
+    const duplicate = contacts.some(
+        contact =>
+            contact.phone === phone &&
+            contact.id !== Number(id)
+    );
+
+    if (duplicate) {
+        return Promise.resolve(
+            failure(409, "A contact with this phone number already exists.")
+        );
     }
 
     contacts[index] = {
         ...contacts[index],
-        name: updatedData.name,
-        phone: updatedData.phone,
-        email: updatedData.email,
-        address: updatedData.address
+        name: updatedContact.name.trim(),
+        phone: phone,
+        email: (updatedContact.email || "").trim(),
+        address: (updatedContact.address || "").trim()
     };
 
-    return { ...contacts[index] };
+    return Promise.resolve(success(contacts[index]));
 }
 
-
-// DELETE: Remove a contact
-
-async function deleteContact(id) {
+function deleteContact(id) {
     const index = contacts.findIndex(
         contact => contact.id === Number(id)
     );
 
     if (index === -1) {
-        throw new Error("Contact not found.");
+        return Promise.resolve(
+            failure(404, "Contact not found.")
+        );
     }
+
+    const deletedContact = contacts[index];
 
     contacts.splice(index, 1);
 
-    return true;
+    return Promise.resolve(success(deletedContact));
 }

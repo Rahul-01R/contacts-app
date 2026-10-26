@@ -3,31 +3,18 @@
 // ========================================
 
 const contactsContainer = document.getElementById("contacts-container");
-
 const addContactButton = document.getElementById("addContact");
-
 const searchInput = document.getElementById("search");
-
 const contactDialog = document.getElementById("contactDialog");
-
 const contactForm = document.getElementById("contactForm");
-
 const dialogTitle = document.getElementById("dialogTitle");
-
 const closeDialogButton = document.getElementById("closeDialog");
-
 const cancelContactButton = document.getElementById("cancelContact");
-
 const contactIdInput = document.getElementById("contactId");
-
 const nameInput = document.getElementById("name");
-
 const phoneInput = document.getElementById("phone");
-
 const emailInput = document.getElementById("email");
-
 const addressInput = document.getElementById("address");
-
 const saveContactButton = document.getElementById("saveContact");
 
 
@@ -37,11 +24,23 @@ const saveContactButton = document.getElementById("saveContact");
 
 let allContacts = [];
 
-
 async function loadContacts() {
     try {
-        allContacts = await getContacts();
+        const response = await getContacts();
 
+        // Check whether the API operation succeeded
+        if (!response.ok) {
+            throw new Error(
+                response.data?.message || "Unable to load contacts."
+            );
+        }
+
+        // Store contacts returned by the API
+        allContacts = Array.isArray(response.data)
+            ? response.data
+            : [];
+
+        // Display contacts using the current search query
         displayFilteredContacts();
 
     } catch (error) {
@@ -50,59 +49,91 @@ async function loadContacts() {
         contactsContainer.replaceChildren();
 
         const message = document.createElement("p");
-
         message.className = "empty-message";
-
         message.textContent = "Unable to load contacts.";
 
         contactsContainer.appendChild(message);
+
+        showMessage(
+            error.message || "Unable to load contacts. Please try again.",
+            "error"
+        );
     }
 }
 
 
 // ========================================
-// 3. RENDER CONTACT CARDS
+// 3. DISPLAY SUCCESS AND ERROR MESSAGES
+// ========================================
+
+function showMessage(message, type = "success") {
+    let messageBox = document.getElementById("appMessage");
+
+    if (!messageBox) {
+        messageBox = document.createElement("p");
+        messageBox.id = "appMessage";
+        messageBox.setAttribute("role", "status");
+        messageBox.setAttribute("aria-live", "polite");
+
+        contactsContainer.parentElement.prepend(messageBox);
+    }
+
+    messageBox.textContent = message;
+    messageBox.className = `app-message ${type}`;
+    messageBox.style.display = "block";
+}
+
+function clearMessage() {
+    const messageBox = document.getElementById("appMessage");
+
+    if (messageBox) {
+        messageBox.textContent = "";
+        messageBox.style.display = "none";
+    }
+}
+
+
+// ========================================
+// 4. RENDER CONTACT CARDS
 // ========================================
 
 function renderContacts(list) {
     contactsContainer.replaceChildren();
 
+    // Handle empty lists and empty search results
     if (list.length === 0) {
         const message = document.createElement("p");
 
         message.className = "empty-message";
 
-        message.textContent = "No contacts yet. Add your first one.";
+        if (allContacts.length === 0) {
+            message.textContent =
+                "No contacts yet. Add your first one.";
+        } else {
+            message.textContent =
+                "No matching contacts found.";
+        }
 
         contactsContainer.appendChild(message);
 
         return;
     }
 
-
     list.forEach(contact => {
 
         // Main card
-
         const card = document.createElement("article");
-
         card.className = "contact-card";
 
-
         // Contact header
-
         const top = document.createElement("div");
-
         top.className = "contact-top";
 
-
         // Initials avatar
-
         const avatar = document.createElement("div");
-
         avatar.className = "contact-avatar";
 
-        const initials = contact.name
+        const initials = String(contact.name || "")
             .trim()
             .split(/\s+/)
             .filter(Boolean)
@@ -112,132 +143,99 @@ function renderContacts(list) {
 
         avatar.textContent = initials || "?";
 
-
         // Contact name
-
         const heading = document.createElement("h3");
-
-        heading.textContent = contact.name;
-
+        heading.textContent = contact.name || "Unnamed Contact";
 
         const nameContainer = document.createElement("div");
-
         nameContainer.appendChild(heading);
 
-
         top.appendChild(avatar);
-
         top.appendChild(nameContainer);
 
         card.appendChild(top);
 
-
         // Phone number
-
         const phone = document.createElement("p");
-
-        phone.textContent = "Phone: " + contact.phone;
-
+        phone.textContent = "Phone: " + (contact.phone || "Not provided");
         card.appendChild(phone);
 
-
         // Email address
-
         const email = document.createElement("p");
-
-        email.textContent = "Email: " + (contact.email || "Not provided");
-
+        email.textContent =
+            "Email: " + (contact.email || "Not provided");
         card.appendChild(email);
 
-
         // Physical address
-
         const address = document.createElement("p");
-
-        address.textContent = "Address: " + (contact.address || "Not provided");
-
+        address.textContent =
+            "Address: " + (contact.address || "Not provided");
         card.appendChild(address);
 
-
         // Action buttons
-
         const actions = document.createElement("div");
-
         actions.className = "contact-actions";
 
-
         // Edit button
-
         const editButton = document.createElement("button");
-
         editButton.type = "button";
-
         editButton.className = "edit-button";
-
         editButton.textContent = "Edit";
 
         editButton.addEventListener("click", () => {
             openEditDialog(contact);
         });
 
-
         // Delete button
-
         const deleteButton = document.createElement("button");
-
         deleteButton.type = "button";
-
         deleteButton.className = "delete-button";
-
         deleteButton.textContent = "Delete";
 
         deleteButton.addEventListener("click", () => {
             handleDeleteContact(contact.id);
         });
 
-
         actions.appendChild(editButton);
-
         actions.appendChild(deleteButton);
 
         card.appendChild(actions);
 
-
         // Add card to the page
-
         contactsContainer.appendChild(card);
-
     });
 }
 
 
 // ========================================
-// 4. SEARCH CONTACTS
+// 5. SEARCH CONTACTS
 // ========================================
 
 function displayFilteredContacts() {
     const query = searchInput.value.trim().toLowerCase();
 
     const filteredContacts = allContacts.filter(contact => {
+        const name = String(contact.name || "").toLowerCase();
+        const phone = String(contact.phone || "").toLowerCase();
+        const email = String(contact.email || "").toLowerCase();
+        const address = String(contact.address || "").toLowerCase();
 
         return (
-            contact.name.toLowerCase().includes(query) ||
-            contact.phone.toLowerCase().includes(query) ||
-            contact.email.toLowerCase().includes(query) ||
-            contact.address.toLowerCase().includes(query)
+            name.includes(query) ||
+            phone.includes(query) ||
+            email.includes(query) ||
+            address.includes(query)
         );
-
     });
 
     renderContacts(filteredContacts);
 }
 
-
 searchInput.addEventListener("input", displayFilteredContacts);
 
 
 // ========================================
-// 5. CLEAR VALIDATION ERRORS
+// 6. CLEAR VALIDATION ERRORS
 // ========================================
 
 function clearErrors() {
@@ -255,35 +253,39 @@ function clearErrors() {
         "addressError"
     ];
 
-
     fields.forEach(field => {
         field.classList.remove("invalid");
-
         field.removeAttribute("aria-invalid");
     });
 
-
     errorIds.forEach(id => {
-        document.getElementById(id).textContent = "";
+        const errorElement = document.getElementById(id);
+
+        if (errorElement) {
+            errorElement.textContent = "";
+        }
     });
 }
 
 
 // ========================================
-// 6. DISPLAY A FIELD ERROR
+// 7. DISPLAY A FIELD ERROR
 // ========================================
 
 function showError(field, errorId, message) {
     field.classList.add("invalid");
-
     field.setAttribute("aria-invalid", "true");
 
-    document.getElementById(errorId).textContent = message;
+    const errorElement = document.getElementById(errorId);
+
+    if (errorElement) {
+        errorElement.textContent = message;
+    }
 }
 
 
 // ========================================
-// 7. VALIDATE THE FORM
+// 8. VALIDATE THE FORM
 // ========================================
 
 function validateForm() {
@@ -291,18 +293,11 @@ function validateForm() {
 
     let isValid = true;
 
-
-    // Get field values
-
     const name = nameInput.value.trim();
-
     const phone = phoneInput.value.trim();
-
     const email = emailInput.value.trim();
 
-
     // Validate name
-
     if (name === "") {
         showError(
             nameInput,
@@ -313,9 +308,7 @@ function validateForm() {
         isValid = false;
     }
 
-
     // Validate phone number
-
     const digits = phone.replace(/\D/g, "");
 
     if (digits.length < 10) {
@@ -328,9 +321,7 @@ function validateForm() {
         isValid = false;
     }
 
-
     // Validate email only when supplied
-
     if (
         email !== "" &&
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -344,24 +335,23 @@ function validateForm() {
         isValid = false;
     }
 
-
     return isValid;
 }
 
 
 // ========================================
-// 8. OPEN THE ADD CONTACT DIALOG
+// 9. OPEN THE ADD CONTACT DIALOG
 // ========================================
 
 function openAddDialog() {
-    contactForm.reset();
+    clearMessage();
 
+    contactForm.reset();
     clearErrors();
 
     contactIdInput.value = "";
 
     dialogTitle.textContent = "Add Contact";
-
     saveContactButton.textContent = "Save Contact";
 
     contactDialog.showModal();
@@ -369,45 +359,33 @@ function openAddDialog() {
     nameInput.focus();
 }
 
-
 addContactButton.addEventListener("click", openAddDialog);
 
 
 // ========================================
-// 9. OPEN THE EDIT CONTACT DIALOG
+// 10. OPEN THE EDIT CONTACT DIALOG
 // ========================================
 
 function openEditDialog(contact) {
-    contactForm.reset();
+    clearMessage();
 
+    contactForm.reset();
     clearErrors();
 
-
-    // Store the ID of the selected contact
-
+    // Store the selected contact ID
     contactIdInput.value = contact.id;
 
-
     // Fill in the existing details
+    nameInput.value = contact.name || "";
+    phoneInput.value = contact.phone || "";
+    emailInput.value = contact.email || "";
+    addressInput.value = contact.address || "";
 
-    nameInput.value = contact.name;
-
-    phoneInput.value = contact.phone;
-
-    emailInput.value = contact.email;
-
-    addressInput.value = contact.address;
-
-
-    // Change the dialog title and button
-
+    // Update dialog title and button
     dialogTitle.textContent = "Edit Contact";
-
     saveContactButton.textContent = "Update Contact";
 
-
     // Open the dialog
-
     contactDialog.showModal();
 
     nameInput.focus();
@@ -415,7 +393,7 @@ function openEditDialog(contact) {
 
 
 // ========================================
-// 10. CLOSE THE DIALOG
+// 11. CLOSE THE DIALOG
 // ========================================
 
 function closeContactDialog() {
@@ -424,18 +402,15 @@ function closeContactDialog() {
     }
 
     contactForm.reset();
-
     clearErrors();
 
     contactIdInput.value = "";
 }
 
-
 closeDialogButton.addEventListener(
     "click",
     closeContactDialog
 );
-
 
 cancelContactButton.addEventListener(
     "click",
@@ -444,25 +419,20 @@ cancelContactButton.addEventListener(
 
 
 // ========================================
-// 11. ADD OR UPDATE A CONTACT
+// 12. ADD OR UPDATE A CONTACT
 // ========================================
 
 contactForm.addEventListener("submit", async function (event) {
-
-    // Prevent the page from refreshing
-
     event.preventDefault();
 
+    clearMessage();
 
-    // Stop if the form is invalid
-
+    // Validate the form
     if (!validateForm()) {
         return;
     }
 
-
-    // Collect the contact details
-
+    // Collect contact details
     const contactData = {
         name: nameInput.value.trim(),
         phone: phoneInput.value.trim(),
@@ -470,104 +440,124 @@ contactForm.addEventListener("submit", async function (event) {
         address: addressInput.value.trim()
     };
 
-
-    // Check whether we are adding or editing
-
+    // Determine whether we are adding or editing
     const contactId = contactIdInput.value;
 
-
-    // Prevent accidental repeated submissions
-
+    // Prevent repeated submissions
     saveContactButton.disabled = true;
 
-
     try {
+        let response;
 
         if (contactId === "") {
-
-            // CREATE a new contact
-
-            await createContact(contactData);
-
+            // Create a new contact
+            response = await createContact(contactData);
         } else {
-
-            // UPDATE an existing contact
-
-            await updateContact(contactId, contactData);
-
+            // Update an existing contact
+            response = await updateContact(
+                contactId,
+                contactData
+            );
         }
 
+        // Handle unsuccessful API responses
+        if (!response.ok) {
+            showMessage(
+                response.data?.message ||
+                "Unable to save the contact. Please try again.",
+                "error"
+            );
 
-        // Close the dialog after success
+            return;
+        }
 
+        // Close dialog after successful saving
         closeContactDialog();
 
-
-        // Reload and display the updated contacts
-
+        // Reload contacts
         await loadContacts();
 
+        // Display success message
+        if (contactId === "") {
+            showMessage(
+                "Contact added successfully.",
+                "success"
+            );
+        } else {
+            showMessage(
+                "Contact updated successfully.",
+                "success"
+            );
+        }
 
     } catch (error) {
-
         console.error("Error saving contact:", error);
 
-        alert("Unable to save the contact. Please try again.");
+        showMessage(
+            error.message ||
+            "Unable to save the contact. Please try again.",
+            "error"
+        );
 
     } finally {
-
         saveContactButton.disabled = false;
-
     }
-
 });
 
 
 // ========================================
-// 12. DELETE A CONTACT
+// 13. DELETE A CONTACT
 // ========================================
 
 async function handleDeleteContact(id) {
-
-    // Ask for confirmation first
-
+    // Ask for confirmation
     const confirmed = window.confirm(
         "Are you sure you want to delete this contact?"
     );
-
-
-    // Stop if the user cancels
 
     if (!confirmed) {
         return;
     }
 
+    clearMessage();
 
     try {
-
         // Delete the selected contact
+        const response = await deleteContact(id);
 
-        await deleteContact(id);
+        // Handle unsuccessful API responses
+        if (!response.ok) {
+            showMessage(
+                response.data?.message ||
+                "Unable to delete the contact.",
+                "error"
+            );
 
+            return;
+        }
 
-        // Reload and display the updated contacts
-
+        // Reload and display updated contacts
         await loadContacts();
 
+        showMessage(
+            "Contact deleted successfully.",
+            "success"
+        );
 
     } catch (error) {
-
         console.error("Error deleting contact:", error);
 
-        alert("Unable to delete the contact. Please try again.");
-
+        showMessage(
+            error.message ||
+            "Unable to delete the contact. Please try again.",
+            "error"
+        );
     }
-
 }
 
 
 // ========================================
-// 13. START THE APPLICATION
+// 14. START THE APPLICATION
 // ========================================
 
 loadContacts();

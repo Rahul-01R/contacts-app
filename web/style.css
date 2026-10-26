@@ -295,3 +295,24 @@ button {
         padding: 18px;
     }
 }
+
+/* Day 4: Application messages */
+
+.app-message {
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.app-message.success {
+    color: #166534;
+    background-color: #dcfce7;
+    border: 1px solid #86efac;
+}
+
+.app-message.error {
+    color: #991b1b;
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+}
