@@ -4,6 +4,8 @@
 #include <nlohmann/json.hpp>
 #include "ContactBook.h"
 #include "Storage.h"
+#include "VCard.h"
+#include <algorithm>
 
 using json = nlohmann::json;
 inline void to_json(nlohmann::json& j, const Warning& w) {
@@ -29,6 +31,9 @@ void respondWith(const OpResult& r, httplib::Response& res, int successStatus, i
             sendJson(res, 404, {{"error", "not_found"}, {"message", "No contact with id " + std::to_string(id)}});
             break;
     }
+}
+void persist(const ContactBook& book) {
+    saveContacts("data/contacts.json", book.listAll());
 }
 int main() {
     ContactBook book;
@@ -60,6 +65,10 @@ int main() {
         }
         std::lock_guard<std::mutex> lock(bookMutex);
         OpResult r = book.add(in);
+
+        if(r.status == OpResult::OK){
+            persist(book);
+        }
         respondWith(r, res, 201);
     });
 
@@ -78,6 +87,10 @@ int main() {
         }
         std::lock_guard<std::mutex> lock(bookMutex);
         OpResult r = book.edit(id, in);
+
+        if(r.status == OpResult::OK){
+            persist(book);
+        }
         respondWith(r, res, 200, id);
     });
 
@@ -85,13 +98,56 @@ int main() {
         int id = std::stoi(req.matches[1]);
         std::lock_guard<std::mutex> lock(bookMutex);
         if (book.remove(id)) {
+            persist(book);
             sendJson(res, 200, {{"deleted", id}});
         } else {
             sendJson(res, 404, {{"error", "not_found"}, {"message", "No contact with id " + std::to_string(id)}});
         }
     });
+    
 
+    svr.Get(R"(/api/contacts/(\d+)/vcard)", [&](const httplib::Request& req, httplib::Response& res) {
+        int id = std::stoi(req.matches[1]);
+        
+        std::lock_guard<std::mutex> lock(bookMutex);
+        Contact c;
+        if (!book.get(id, c)) {
+            sendJson(res, 404, {{"error", "not_found"}, {"message", "No contact with id " + std::to_string(id)}});
+            return;
+        }
+
+        // Replace non-alphanumeric characters with underscore
+        std::string safeName = c.name;
+        std::replace_if(safeName.begin(), safeName.end(), [](char ch) { return !std::isalnum(ch); }, '_');
+        if (safeName.empty()) safeName = "contact";
+
+        res.set_header("Content-Disposition", "attachment; filename=\"" + safeName + ".vcf\"");
+        res.set_content(toVCard(c), "text/vcard; charset=utf-8");
+    });
+
+    svr.Get("/api/search", [&](const httplib::Request& req, httplib::Response& res) {
+        if (!req.has_param("q")) {
+            sendJson(res, 400, {{"error", "bad_request"}, {"message", "Missing query parameter 'q'"}});
+            return;
+        }
+        std::string q = req.get_param_value("q");
+        
+        std::lock_guard<std::mutex> lock(bookMutex);
+        json j = book.searchExact(q);
+        sendJson(res, 200, j);
+    });
+
+    // Request Logger
+    svr.set_logger([](const httplib::Request& req, const httplib::Response& res) {
+        std::cout << req.method << " " << req.path << " -> " << res.status << std::endl;
+    });
+    
         std::cout << "Open http://127.0.0.1:8080" << std::endl;
+        std::vector<Contact> loaded = loadContacts("data/contacts.json");
+        if (loaded.empty()) {
+            loaded = loadContacts("data/sample_contacts.json");
+        }
+        book.loadAll(loaded);
         svr.listen("127.0.0.1", 8080);
         return 0;
     }
