@@ -1,0 +1,30 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "Contacts API",
+    "collectionId": "88ca53af-25a6-4b64-9e68-bccf884bf7e2",
+    "dateExported": "2026-10-28T07:50:33.022Z",
+    "version": "1.4",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "6ca68829-a3e3-4964-b467-9c4b7404e3d8",
+            "colId": "88ca53af-25a6-4b64-9e68-bccf884bf7e2",
+            "containerId": "",
+            "name": "http://127.0.0.1:8080/api/search?q=",
+            "url": "http://127.0.0.1:8080/api/search?q=",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2026-10-28T07:49:20.559Z",
+            "modified": "2026-10-28T07:49:20.559Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "q",
+                    "value": "",
+                    "isPath": false
+                }
+            ]
+        }
+    ],
+    "ref": "5an5NkmFYVq5hD9bbj7UiHKpYjPZu4XF8O_qXMAqt6hhz61xROPkpbj0Beh6fOnAowng50O3K97SpSw63MQukQ"
+}
