@@ -127,6 +127,36 @@ std::vector<Warning> ContactBook::sameNameWarnings(const Contact& c) const {
     }
     return result;
 }
+// A linear scan over all contacts is fine at this size (hundreds of contacts).
+// A third hash table would be overkill, so we keep it simple.
+std::vector<Warning> ContactBook::sameEmailWarnings(const Contact& c) const {
+    std::vector<Warning> result;
+    if (c.email.empty()) {
+        return result;                          // no email, nothing to compare
+    }
+
+    std::string mine = toLowerAscii(c.email);
+    for (const auto& pair : byId_) {
+        const Contact& other = pair.second;
+        if (other.id == c.id) {
+            continue;                           // that is the contact itself
+        }
+        if (toLowerAscii(other.email) == mine) {
+            Warning w;
+            w.type = "same_email";
+            w.other = other;
+            result.push_back(w);
+        }
+    }
+    return result;
+}
+
+std::vector<Warning> ContactBook::warningsFor(const Contact& c) const {
+    std::vector<Warning> all = sameNameWarnings(c);
+    std::vector<Warning> emailOnes = sameEmailWarnings(c);
+    all.insert(all.end(), emailOnes.begin(), emailOnes.end());
+    return all;
+}
 
 // ---------- public functions ----------
 
@@ -187,7 +217,7 @@ OpResult ContactBook::add(const Contact& in) {
     nextId_++;
 
     // 4. Same-name warnings (checked before storing, so it can't find itself).
-    result.warnings = sameNameWarnings(saved);
+        result.warnings = warningsFor(saved);
 
     // 5. Store in all three structures.
     store(saved);
@@ -197,16 +227,56 @@ OpResult ContactBook::add(const Contact& in) {
     return result;
 }
 
-// TEMPORARY until Day 5: finds the contact but changes nothing.
-OpResult ContactBook::edit(int id, const Contact&) {
+OpResult ContactBook::edit(int id, const Contact& in) {
     OpResult result;
-    Contact existing;
-    if (!get(id, existing)) {
+
+    // ----- CHECKS (nothing is changed in this part) -----
+
+    // 1. Does the contact exist?
+    auto it = byId_.find(id);
+    if (it == byId_.end()) {
         result.status = OpResult::NOT_FOUND;
         return result;
     }
+
+    // 2. Are the new values valid?
+    if (!validate(in, result)) {
+        return result;
+    }
+
+    // 3. Would the new phone clash with a DIFFERENT contact?
+    std::string oldKey = phoneKey(it->second.phone);
+    std::string newKey = phoneKey(in.phone);
+    if (newKey != oldKey) {
+        const int* ownerId = phoneIndex_.find(newKey);
+        if (ownerId != nullptr) {
+            result.status = OpResult::DUPLICATE_PHONE;
+            result.contact = byId_.at(*ownerId);
+            return result;
+        }
+    }
+
+    // ----- CHANGES (every check has passed, so nothing can fail now) -----
+
+    Contact oldContact = it->second;            // copy, needed to remove old name words
+    Contact saved = cleanedCopy(in);
+    saved.id = id;                              // the client's id is ignored
+
+    // 4. Phone index: only touch it if the key really changed.
+    if (newKey != oldKey) {
+        phoneIndex_.erase(oldKey);
+        phoneIndex_.insert(newKey, id);
+    }
+
+    // 5. Name index: remove the old words, add the new ones.
+    removeNameWords(oldContact);
+    addNameWords(saved);
+
+    // 6. Main storage, then warnings (the contact skips itself in the checks).
+    byId_[id] = saved;
+    result.warnings = warningsFor(saved);
     result.status = OpResult::OK;
-    result.contact = existing;
+    result.contact = saved;
     return result;
 }
 
