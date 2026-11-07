@@ -1,151 +1,150 @@
-let contacts = [
-    {
-        id: 1,
-        name: "Rahul Sharma",
-        phone: "9876543210",
-        email: "rahul@example.com",
-        address: "Visakhapatnam"
-    },
-    {
-        id: 2,
-        name: "Priya Kumar",
-        phone: "9123456780",
-        email: "priya@example.com",
-        address: "Hyderabad"
-    },
-    {
-        id: 3,
-        name: "Arjun Reddy",
-        phone: "9988776655",
-        email: "arjun@example.com",
-        address: "Vijayawada"
-    },
-    {
-        id: 4,
-        name: "Sneha Rao",
-        phone: "9012345678",
-        email: "sneha@example.com",
-        address: "Chennai"
-    },
-    {
-        id: 5,
-        name: "Kiran Kumar",
-        phone: "9090909090",
-        email: "",
-        address: "Bengaluru"
-    }
-];
+// =====================================
+// API CONFIGURATION
+// =====================================
 
-function success(data, status = 200) {
-    return {
-        ok: true,
-        status: status,
-        data: data
-    };
-}
+const USE_MOCK = false;
 
-function failure(status, message) {
-    return {
-        ok: false,
-        status: status,
-        data: {
-            message: message
+// Change this port according to Person C's server.
+const API_BASE_URL = "http://localhost:8080/api";
+
+
+// =====================================
+// COMMON REQUEST FUNCTION
+// =====================================
+
+async function apiRequest(endpoint, options = {}) {
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE_URL}${endpoint}`,
+            {
+                ...options,
+
+                headers: {
+                    "Content-Type": "application/json",
+                    ...options.headers
+                }
+            }
+        );
+
+        // Read server response
+        const text = await response.text();
+
+        let data = null;
+
+        if (text) {
+
+            try {
+                data = JSON.parse(text);
+            }
+            catch {
+                data = { message: text };
+            }
+
         }
-    };
+
+        // Handle HTTP errors
+        if (!response.ok) {
+
+            return {
+                ok: false,
+                status: response.status,
+                data: data
+            };
+
+        }
+
+        return {
+            ok: true,
+            status: response.status,
+            data: data
+        };
+
+    }
+
+    catch (error) {
+
+        console.error("API Error:", error);
+
+        return {
+            ok: false,
+            status: 0,
+            data: {
+                message: "Cannot connect to the server. Please check whether the backend is running."
+            }
+        };
+
+    }
+
 }
 
-function getContacts() {
-    return Promise.resolve(success([...contacts]));
+
+// =====================================
+// GET ALL CONTACTS
+// =====================================
+
+async function getContacts(searchQuery = "") {
+
+    let endpoint = "/contacts";
+
+    if (searchQuery.trim() !== "") {
+
+        endpoint += "?search=" + encodeURIComponent(searchQuery);
+
+    }
+
+    return await apiRequest(endpoint, {
+        method: "GET"
+    });
+
 }
 
-function addContact(contact) {
-    const phone = String(contact.phone || "").trim();
 
-    if (!contact.name || !phone) {
-        return Promise.resolve(
-            failure(400, "Name and phone number are required.")
-        );
-    }
+// =====================================
+// CREATE CONTACT
+// =====================================
 
-    const duplicate = contacts.some(
-        item => item.phone === phone
-    );
+async function createContact(contactData) {
 
-    if (duplicate) {
-        return Promise.resolve(
-            failure(409, "A contact with this phone number already exists.")
-        );
-    }
+    return await apiRequest("/contacts", {
 
-    const newContact = {
-        id: Date.now(),
-        name: contact.name.trim(),
-        phone: phone,
-        email: (contact.email || "").trim(),
-        address: (contact.address || "").trim()
-    };
+        method: "POST",
 
-    contacts.push(newContact);
+        body: JSON.stringify(contactData)
 
-    return Promise.resolve(success(newContact, 201));
+    });
+
 }
 
-function updateContact(id, updatedContact) {
-    const index = contacts.findIndex(
-        contact => contact.id === Number(id)
-    );
 
-    if (index === -1) {
-        return Promise.resolve(
-            failure(404, "Contact not found.")
-        );
-    }
+// =====================================
+// UPDATE CONTACT
+// =====================================
 
-    const phone = String(updatedContact.phone || "").trim();
+async function updateContact(id, updatedData) {
 
-    if (!updatedContact.name || !phone) {
-        return Promise.resolve(
-            failure(400, "Name and phone number are required.")
-        );
-    }
+    return await apiRequest(`/contacts/${id}`, {
 
-    const duplicate = contacts.some(
-        contact =>
-            contact.phone === phone &&
-            contact.id !== Number(id)
-    );
+        method: "PUT",
 
-    if (duplicate) {
-        return Promise.resolve(
-            failure(409, "A contact with this phone number already exists.")
-        );
-    }
+        body: JSON.stringify(updatedData)
 
-    contacts[index] = {
-        ...contacts[index],
-        name: updatedContact.name.trim(),
-        phone: phone,
-        email: (updatedContact.email || "").trim(),
-        address: (updatedContact.address || "").trim()
-    };
+    });
 
-    return Promise.resolve(success(contacts[index]));
 }
 
-function deleteContact(id) {
-    const index = contacts.findIndex(
-        contact => contact.id === Number(id)
-    );
 
-    if (index === -1) {
-        return Promise.resolve(
-            failure(404, "Contact not found.")
-        );
-    }
+// =====================================
+// DELETE CONTACT
+// =====================================
 
-    const deletedContact = contacts[index];
+async function deleteContact(id) {
 
-    contacts.splice(index, 1);
+    return await apiRequest(`/contacts/${id}`, {
 
-    return Promise.resolve(success(deletedContact));
+        method: "DELETE"
+
+    });
+
 }

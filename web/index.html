@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,187 +14,170 @@
 
 <body>
 
-    <main class="app-container">
+    <!-- Main Container -->
+    <div class="container">
 
-        <header class="app-header">
+        <!-- Header -->
+        <header class="header">
 
-            <div>
-                <h1>My Contacts</h1>
-                <p>Manage your contacts easily</p>
-            </div>
+            <h1>Contacts App</h1>
 
-            <button type="button" id="addContact">
-                + Add Contact
-            </button>
+            <p>Manage your contacts easily</p>
 
         </header>
 
 
+        <!-- Search and Add Contact Section -->
         <section class="toolbar">
 
             <input
-                type="search"
+                type="text"
                 id="search"
                 placeholder="Search contacts..."
-                aria-label="Search contacts"
+                autocomplete="off"
             >
+
+            <button id="addContact">
+                + Add Contact
+            </button>
 
         </section>
 
 
-        <section
-            id="contacts-container"
-            class="contacts-grid"
-            aria-live="polite"
-        ></section>
+        <!-- Success and Error Messages -->
+        <p id="app-message" role="status" aria-live="polite"></p>
 
 
-        <!-- Add/Edit Contact Dialog -->
+        <!-- Contacts Section -->
+        <section class="contacts-section">
 
-        <dialog id="contactDialog">
+            <h2>My Contacts</h2>
 
-            <div class="dialog-header">
+            <div id="contacts-container">
 
-                <h2 id="dialogTitle">Add Contact</h2>
-
-                <button
-                    type="button"
-                    id="closeDialog"
-                    class="close-button"
-                    aria-label="Close dialog"
-                >
-                    &times;
-                </button>
+                <p>Loading contacts...</p>
 
             </div>
 
-
-            <form id="contactForm" novalidate>
-
-                <input type="hidden" id="contactId">
+        </section>
 
 
-                <!-- Name -->
+        <!-- Add / Edit Contact Dialog -->
+        <dialog id="contactDialog">
 
-                <div class="form-group">
+            <div class="dialog-content">
 
-                    <label for="name">Full Name *</label>
+                <h2 id="dialogTitle">Add Contact</h2>
+
+
+                <!-- Contact Form -->
+                <form id="contactForm">
+
+                    <!-- Hidden Contact ID -->
+                    <input
+                        type="hidden"
+                        id="contactId"
+                    >
+
+
+                    <!-- Name -->
+                    <label for="name">
+                        Full Name
+                    </label>
 
                     <input
                         type="text"
                         id="name"
                         placeholder="Enter full name"
-                        autocomplete="name"
-                        aria-describedby="nameError"
+                        required
                     >
 
-                    <small
-                        class="error-message"
-                        id="nameError"
-                    ></small>
 
-                </div>
-
-
-                <!-- Phone -->
-
-                <div class="form-group">
-
-                    <label for="phone">Phone Number *</label>
+                    <!-- Phone -->
+                    <label for="phone">
+                        Phone Number
+                    </label>
 
                     <input
                         type="tel"
                         id="phone"
                         placeholder="Enter phone number"
-                        autocomplete="tel"
-                        aria-describedby="phoneError"
+                        required
                     >
 
-                    <small
-                        class="error-message"
-                        id="phoneError"
-                    ></small>
 
-                </div>
-
-
-                <!-- Email -->
-
-                <div class="form-group">
-
-                    <label for="email">Email Address</label>
+                    <!-- Email -->
+                    <label for="email">
+                        Email Address
+                    </label>
 
                     <input
                         type="email"
                         id="email"
                         placeholder="Enter email address"
-                        autocomplete="email"
-                        aria-describedby="emailError"
                     >
 
-                    <small
-                        class="error-message"
-                        id="emailError"
-                    ></small>
 
-                </div>
-
-
-                <!-- Address -->
-
-                <div class="form-group">
-
-                    <label for="address">Address</label>
+                    <!-- Address -->
+                    <label for="address">
+                        Address
+                    </label>
 
                     <textarea
                         id="address"
-                        rows="3"
                         placeholder="Enter address"
-                        autocomplete="street-address"
-                        aria-describedby="addressError"
+                        rows="3"
                     ></textarea>
 
-                    <small
-                        class="error-message"
-                        id="addressError"
-                    ></small>
 
-                </div>
+                    <!-- Form Buttons -->
+                    <div class="form-buttons">
+
+                        <button
+                            type="submit"
+                            id="saveContact"
+                        >
+                            Save Contact
+                        </button>
 
 
-                <!-- Form Buttons -->
+                        <button
+                            type="button"
+                            id="cancelContact"
+                        >
+                            Cancel
+                        </button>
 
-                <div class="form-actions">
+                    </div>
 
-                    <button
-                        type="button"
-                        id="cancelContact"
-                        class="cancel-button"
-                    >
-                        Cancel
-                    </button>
+                </form>
 
-                    <button
-                        type="submit"
-                        id="saveContact"
-                    >
-                        Save Contact
-                    </button>
 
-                </div>
+                <!-- Close Dialog Button -->
+                <button
+                    type="button"
+                    id="closeDialog"
+                    aria-label="Close dialog"
+                >
+                    Close
+                </button>
 
-            </form>
+            </div>
 
         </dialog>
 
-    </main>
+    </div>
 
 
-    <!-- Load the API before the application code -->
+    <!-- JavaScript Files -->
 
+    <!-- API communication -->
     <script src="api.js"></script>
+
+    <!-- Application logic -->
     <script src="app.js"></script>
 
 </body>
 
 </html>
+```
