@@ -1,6 +1,6 @@
-// =====================================
+// =========================================
 // GET HTML ELEMENTS
-// =====================================
+// =========================================
 
 const contactsContainer =
     document.getElementById("contacts-container");
@@ -41,64 +41,98 @@ const emailInput =
 const addressInput =
     document.getElementById("address");
 
+const messageElement =
+    document.getElementById("app-message");
 
-// =====================================
-// MESSAGE DISPLAY
-// =====================================
 
-let messageElement = document.getElementById("app-message");
-
-if (!messageElement) {
-
-    messageElement = document.createElement("p");
-
-    messageElement.id = "app-message";
-
-    contactsContainer.parentNode.insertBefore(
-        messageElement,
-        contactsContainer
-    );
-
-}
-
+// =========================================
+// DISPLAY MESSAGE
+// =========================================
 
 function showMessage(message, isError = false) {
 
     messageElement.textContent = message;
 
-    messageElement.style.color =
-        isError ? "red" : "green";
+    messageElement.className = isError
+        ? "error-message"
+        : "success-message";
 
 }
 
 
-// =====================================
+// =========================================
 // GET INITIALS
-// =====================================
+// =========================================
 
 function getInitials(name) {
 
     return name
-        .split(" ")
-        .filter(word => word.length > 0)
+        .trim()
+        .split(/\s+/)
         .map(word => word[0])
         .join("")
+        .substring(0, 2)
         .toUpperCase();
 
 }
 
 
-// =====================================
-// DISPLAY CONTACTS
-// =====================================
+// =========================================
+// GET CONTACT ARRAY FROM RESPONSE
+// =========================================
 
-function renderContacts(list) {
+function extractContacts(data) {
+
+    if (Array.isArray(data)) {
+
+        return data;
+
+    }
+
+    if (Array.isArray(data?.contacts)) {
+
+        return data.contacts;
+
+    }
+
+    if (Array.isArray(data?.data)) {
+
+        return data.data;
+
+    }
+
+    if (Array.isArray(data?.results)) {
+
+        return data.results;
+
+    }
+
+    if (Array.isArray(data?.data?.contacts)) {
+
+        return data.data.contacts;
+
+    }
+
+    return null;
+
+}
+
+
+// =========================================
+// DISPLAY CONTACTS
+// =========================================
+
+function renderContacts(contacts) {
 
     contactsContainer.replaceChildren();
 
-    if (list.length === 0) {
 
-        const emptyMessage = document.createElement("p");
+    if (contacts.length === 0) {
+
+        const emptyMessage =
+            document.createElement("p");
+
+        emptyMessage.className = "empty-message";
 
         emptyMessage.textContent =
             searchInput.value.trim()
@@ -112,39 +146,46 @@ function renderContacts(list) {
     }
 
 
-    list.forEach(contact => {
+    contacts.forEach(contact => {
 
-        const card = document.createElement("div");
+        const card =
+            document.createElement("div");
 
         card.className = "contact-card";
 
 
         // Initials
 
-        const initials = document.createElement("div");
+        const initials =
+            document.createElement("div");
 
         initials.className = "contact-initials";
 
-        initials.textContent = getInitials(contact.name);
+        initials.textContent =
+            getInitials(contact.name || "Unknown");
 
 
         // Name
 
-        const name = document.createElement("h3");
+        const name =
+            document.createElement("h3");
 
-        name.textContent = contact.name;
+        name.textContent = contact.name || "";
 
 
         // Phone
 
-        const phone = document.createElement("p");
+        const phone =
+            document.createElement("p");
 
-        phone.textContent = "Phone: " + contact.phone;
+        phone.textContent =
+            "Phone: " + (contact.phone || "Not provided");
 
 
         // Email
 
-        const email = document.createElement("p");
+        const email =
+            document.createElement("p");
 
         email.textContent =
             "Email: " + (contact.email || "Not provided");
@@ -152,17 +193,21 @@ function renderContacts(list) {
 
         // Address
 
-        const address = document.createElement("p");
+        const address =
+            document.createElement("p");
 
         address.textContent =
             "Address: " + (contact.address || "Not provided");
 
 
-        // Edit Button
+        // Edit button
 
-        const editButton = document.createElement("button");
+        const editButton =
+            document.createElement("button");
 
         editButton.textContent = "Edit";
+
+        editButton.className = "edit-btn";
 
         editButton.addEventListener("click", () => {
 
@@ -171,11 +216,14 @@ function renderContacts(list) {
         });
 
 
-        // Delete Button
+        // Delete button
 
-        const deleteButton = document.createElement("button");
+        const deleteButton =
+            document.createElement("button");
 
         deleteButton.textContent = "Delete";
+
+        deleteButton.className = "delete-btn";
 
         deleteButton.addEventListener("click", () => {
 
@@ -202,39 +250,40 @@ function renderContacts(list) {
 }
 
 
-// =====================================
-// LOAD CONTACTS FROM BACKEND
-// =====================================
+// =========================================
+// LOAD CONTACTS
+// =========================================
 
-async function loadContacts(query = "") {
+async function loadContacts() {
 
     showMessage("Loading contacts...");
 
-    const result = await getContacts(query);
+    const result = await getContacts();
 
 
     if (!result.ok) {
 
         showMessage(
-            result.data?.message || "Failed to load contacts.",
+            result.data?.message || "Unable to load contacts.",
             true
         );
+
+        contactsContainer.replaceChildren();
 
         return;
 
     }
 
 
-    // Backend should return an array of contacts.
-
-    const contacts = Array.isArray(result.data)
-        ? result.data
-        : result.data?.contacts;
+    const contacts = extractContacts(result.data);
 
 
-    if (!Array.isArray(contacts)) {
+    if (contacts === null) {
 
-        showMessage("Invalid contacts response from server.", true);
+        showMessage(
+            "Unexpected response format from backend.",
+            true
+        );
 
         return;
 
@@ -248,9 +297,76 @@ async function loadContacts(query = "") {
 }
 
 
-// =====================================
+// =========================================
+// SEARCH CONTACTS
+// =========================================
+
+let searchTimeout = null;
+
+
+searchInput.addEventListener("input", () => {
+
+    clearTimeout(searchTimeout);
+
+
+    searchTimeout = setTimeout(async () => {
+
+        const query = searchInput.value.trim();
+
+
+        if (query === "") {
+
+            await loadContacts();
+
+            return;
+
+        }
+
+
+        showMessage("Searching...");
+
+        const result = await searchContacts(query);
+
+
+        if (!result.ok) {
+
+            showMessage(
+                result.data?.message || "Search failed.",
+                true
+            );
+
+            return;
+
+        }
+
+
+        const contacts = extractContacts(result.data);
+
+
+        if (contacts === null) {
+
+            showMessage(
+                "Unexpected search response format.",
+                true
+            );
+
+            return;
+
+        }
+
+
+        showMessage("");
+
+        renderContacts(contacts);
+
+    }, 300);
+
+});
+
+
+// =========================================
 // OPEN ADD CONTACT DIALOG
-// =====================================
+// =========================================
 
 addContactButton.addEventListener("click", () => {
 
@@ -265,17 +381,17 @@ addContactButton.addEventListener("click", () => {
 });
 
 
-// =====================================
+// =========================================
 // OPEN EDIT CONTACT DIALOG
-// =====================================
+// =========================================
 
 function openEditDialog(contact) {
 
     contactId.value = contact.id;
 
-    nameInput.value = contact.name;
+    nameInput.value = contact.name || "";
 
-    phoneInput.value = contact.phone;
+    phoneInput.value = contact.phone || "";
 
     emailInput.value = contact.email || "";
 
@@ -288,9 +404,9 @@ function openEditDialog(contact) {
 }
 
 
-// =====================================
+// =========================================
 // CLOSE DIALOG
-// =====================================
+// =========================================
 
 closeDialog.addEventListener("click", () => {
 
@@ -306,9 +422,9 @@ cancelContact.addEventListener("click", () => {
 });
 
 
-// =====================================
+// =========================================
 // ADD / UPDATE CONTACT
-// =====================================
+// =========================================
 
 contactForm.addEventListener("submit", async (event) => {
 
@@ -328,7 +444,7 @@ contactForm.addEventListener("submit", async (event) => {
     };
 
 
-    // Frontend validation
+    // Validation
 
     if (!contactData.name) {
 
@@ -339,11 +455,16 @@ contactForm.addEventListener("submit", async (event) => {
     }
 
 
-    const digits = contactData.phone.replace(/\D/g, "");
+    const digits =
+        contactData.phone.replace(/\D/g, "");
+
 
     if (digits.length < 10) {
 
-        showMessage("Enter a valid phone number.", true);
+        showMessage(
+            "Phone number must contain at least 10 digits.",
+            true
+        );
 
         return;
 
@@ -355,17 +476,17 @@ contactForm.addEventListener("submit", async (event) => {
     let result;
 
 
-    if (id) {
+    // Update existing contact
 
-        // UPDATE EXISTING CONTACT
+    if (id) {
 
         result = await updateContact(id, contactData);
 
     }
 
-    else {
+    // Create new contact
 
-        // CREATE NEW CONTACT
+    else {
 
         result = await createContact(contactData);
 
@@ -379,7 +500,7 @@ contactForm.addEventListener("submit", async (event) => {
         if (result.status === 409) {
 
             showMessage(
-                "This phone number already exists. Use another number.",
+                "Duplicate phone number! This contact already exists.",
                 true
             );
 
@@ -396,7 +517,10 @@ contactForm.addEventListener("submit", async (event) => {
 
         else if (result.status === 404) {
 
-            showMessage("Contact not found.", true);
+            showMessage(
+                "Contact not found.",
+                true
+            );
 
         }
 
@@ -414,7 +538,7 @@ contactForm.addEventListener("submit", async (event) => {
     }
 
 
-    // Successful operation
+    // Success
 
     contactDialog.close();
 
@@ -423,19 +547,32 @@ contactForm.addEventListener("submit", async (event) => {
     showMessage(
         id
             ? "Contact updated successfully!"
-            : "Contact created successfully!"
+            : "Contact added successfully!"
     );
 
-    await loadContacts(searchInput.value);
+
+    await loadContacts();
 
 });
 
 
-// =====================================
+// =========================================
 // DELETE CONTACT
-// =====================================
+// =========================================
 
 async function handleDelete(id) {
+
+    if (id === undefined || id === null) {
+
+        showMessage(
+            "Contact ID is missing.",
+            true
+        );
+
+        return;
+
+    }
+
 
     const confirmed = confirm(
         "Are you sure you want to delete this contact?"
@@ -466,33 +603,35 @@ async function handleDelete(id) {
 
     showMessage("Contact deleted successfully!");
 
-    await loadContacts(searchInput.value);
+    await loadContacts();
 
 }
 
 
-// =====================================
-// SEARCH CONTACTS
-// =====================================
+// =========================================
+// INITIAL APPLICATION LOAD
+// =========================================
 
-let searchTimeout;
+async function initializeApp() {
 
-
-searchInput.addEventListener("input", () => {
-
-    clearTimeout(searchTimeout);
-
-    searchTimeout = setTimeout(() => {
-
-        loadContacts(searchInput.value);
-
-    }, 300);
-
-});
+    const server = await checkServer();
 
 
-// =====================================
-// INITIAL LOAD
-// =====================================
+    if (!server.ok) {
 
-loadContacts();
+        showMessage(
+            "Backend server is not responding. Start the C++ server.",
+            true
+        );
+
+        return;
+
+    }
+
+
+    await loadContacts();
+
+}
+
+
+initializeApp();

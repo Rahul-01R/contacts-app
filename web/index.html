@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,75 +13,102 @@
 
 <body>
 
-    <!-- Main Container -->
     <div class="container">
 
         <!-- Header -->
         <header class="header">
 
-            <h1>Contacts App</h1>
+            <div class="header-content">
 
-            <p>Manage your contacts easily</p>
+                <h1>Contacts App</h1>
+
+                <p>Manage your contacts easily</p>
+
+            </div>
 
         </header>
 
 
-        <!-- Search and Add Contact Section -->
+        <!-- Search and Add -->
         <section class="toolbar">
 
             <input
                 type="text"
                 id="search"
-                placeholder="Search contacts..."
+                placeholder="Search contacts by name or phone..."
                 autocomplete="off"
             >
 
-            <button id="addContact">
+            <button id="addContact" class="primary-btn">
                 + Add Contact
             </button>
 
         </section>
 
 
-        <!-- Success and Error Messages -->
-        <p id="app-message" role="status" aria-live="polite"></p>
+        <!-- Messages -->
+        <div
+            id="app-message"
+            role="status"
+            aria-live="polite"
+        ></div>
 
 
-        <!-- Contacts Section -->
+        <!-- Contacts -->
         <section class="contacts-section">
 
-            <h2>My Contacts</h2>
+            <div class="section-heading">
+
+                <h2>My Contacts</h2>
+
+            </div>
+
 
             <div id="contacts-container">
 
-                <p>Loading contacts...</p>
+                <p class="loading">
+                    Loading contacts...
+                </p>
 
             </div>
 
         </section>
 
 
-        <!-- Add / Edit Contact Dialog -->
+        <!-- Add/Edit Dialog -->
         <dialog id="contactDialog">
 
             <div class="dialog-content">
 
-                <h2 id="dialogTitle">Add Contact</h2>
+                <div class="dialog-header">
+
+                    <h2 id="dialogTitle">
+                        Add Contact
+                    </h2>
+
+                    <button
+                        type="button"
+                        id="closeDialog"
+                        class="close-btn"
+                        aria-label="Close dialog"
+                    >
+                        &times;
+                    </button>
+
+                </div>
 
 
                 <!-- Contact Form -->
                 <form id="contactForm">
 
-                    <!-- Hidden Contact ID -->
                     <input
                         type="hidden"
                         id="contactId"
                     >
 
 
-                    <!-- Name -->
                     <label for="name">
-                        Full Name
+                        Full Name *
                     </label>
 
                     <input
@@ -93,9 +119,8 @@
                     >
 
 
-                    <!-- Phone -->
                     <label for="phone">
-                        Phone Number
+                        Phone Number *
                     </label>
 
                     <input
@@ -106,7 +131,6 @@
                     >
 
 
-                    <!-- Email -->
                     <label for="email">
                         Email Address
                     </label>
@@ -118,7 +142,6 @@
                     >
 
 
-                    <!-- Address -->
                     <label for="address">
                         Address
                     </label>
@@ -130,12 +153,12 @@
                     ></textarea>
 
 
-                    <!-- Form Buttons -->
                     <div class="form-buttons">
 
                         <button
                             type="submit"
                             id="saveContact"
+                            class="primary-btn"
                         >
                             Save Contact
                         </button>
@@ -144,6 +167,7 @@
                         <button
                             type="button"
                             id="cancelContact"
+                            class="secondary-btn"
                         >
                             Cancel
                         </button>
@@ -152,16 +176,6 @@
 
                 </form>
 
-
-                <!-- Close Dialog Button -->
-                <button
-                    type="button"
-                    id="closeDialog"
-                    aria-label="Close dialog"
-                >
-                    Close
-                </button>
-
             </div>
 
         </dialog>
@@ -169,15 +183,12 @@
     </div>
 
 
-    <!-- JavaScript Files -->
+    <!-- JavaScript -->
 
-    <!-- API communication -->
     <script src="api.js"></script>
 
-    <!-- Application logic -->
     <script src="app.js"></script>
 
 </body>
 
 </html>
-```

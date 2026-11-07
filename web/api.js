@@ -1,16 +1,13 @@
-// =====================================
+// =========================================
 // API CONFIGURATION
-// =====================================
+// =========================================
 
-const USE_MOCK = false;
-
-// Change this port according to Person C's server.
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "http://127.0.0.1:8080/api";
 
 
-// =====================================
-// COMMON REQUEST FUNCTION
-// =====================================
+// =========================================
+// COMMON API REQUEST FUNCTION
+// =========================================
 
 async function apiRequest(endpoint, options = {}) {
 
@@ -22,57 +19,89 @@ async function apiRequest(endpoint, options = {}) {
                 ...options,
 
                 headers: {
-                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    ...(options.body !== undefined
+                        ? { "Content-Type": "application/json" }
+                        : {}),
                     ...options.headers
                 }
             }
         );
 
-        // Read server response
+
+        // Read response
+
         const text = await response.text();
 
         let data = null;
 
+
         if (text) {
 
             try {
+
                 data = JSON.parse(text);
+
             }
+
             catch {
-                data = { message: text };
+
+                data = {
+                    message: text
+                };
+
             }
 
         }
 
-        // Handle HTTP errors
+
+        // Check HTTP status
+
         if (!response.ok) {
 
             return {
+
                 ok: false,
+
                 status: response.status,
+
                 data: data
+
             };
 
         }
 
+
         return {
+
             ok: true,
+
             status: response.status,
+
             data: data
+
         };
 
     }
 
+
     catch (error) {
 
-        console.error("API Error:", error);
+        console.error("API Connection Error:", error);
 
         return {
+
             ok: false,
+
             status: 0,
+
             data: {
-                message: "Cannot connect to the server. Please check whether the backend is running."
+
+                message:
+                    "Cannot connect to backend. Check whether the C++ server is running and CORS is enabled."
+
             }
+
         };
 
     }
@@ -80,30 +109,42 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 
-// =====================================
+// =========================================
 // GET ALL CONTACTS
-// =====================================
+// =========================================
 
-async function getContacts(searchQuery = "") {
+async function getContacts() {
 
-    let endpoint = "/contacts";
+    return await apiRequest("/contacts", {
 
-    if (searchQuery.trim() !== "") {
-
-        endpoint += "?search=" + encodeURIComponent(searchQuery);
-
-    }
-
-    return await apiRequest(endpoint, {
         method: "GET"
+
     });
 
 }
 
 
-// =====================================
+// =========================================
+// SEARCH CONTACTS
+// =========================================
+
+async function searchContacts(query) {
+
+    const endpoint =
+        "/search?q=" + encodeURIComponent(query);
+
+    return await apiRequest(endpoint, {
+
+        method: "GET"
+
+    });
+
+}
+
+
+// =========================================
 // CREATE CONTACT
-// =====================================
+// =========================================
 
 async function createContact(contactData) {
 
@@ -118,32 +159,53 @@ async function createContact(contactData) {
 }
 
 
-// =====================================
+// =========================================
 // UPDATE CONTACT
-// =====================================
+// =========================================
 
-async function updateContact(id, updatedData) {
+async function updateContact(id, contactData) {
 
-    return await apiRequest(`/contacts/${id}`, {
+    return await apiRequest(
+        `/contacts/${encodeURIComponent(id)}`,
+        {
 
-        method: "PUT",
+            method: "PUT",
 
-        body: JSON.stringify(updatedData)
+            body: JSON.stringify(contactData)
 
-    });
+        }
+    );
 
 }
 
 
-// =====================================
+// =========================================
 // DELETE CONTACT
-// =====================================
+// =========================================
 
 async function deleteContact(id) {
 
-    return await apiRequest(`/contacts/${id}`, {
+    return await apiRequest(
+        `/contacts/${encodeURIComponent(id)}`,
+        {
 
-        method: "DELETE"
+            method: "DELETE"
+
+        }
+    );
+
+}
+
+
+// =========================================
+// CHECK BACKEND SERVER
+// =========================================
+
+async function checkServer() {
+
+    return await apiRequest("/ping", {
+
+        method: "GET"
 
     });
 
