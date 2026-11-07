@@ -60,4 +60,9 @@ private:
 
     // Other contacts with the same name (ignoring capitals and extra spaces).
     std::vector<Warning> sameNameWarnings(const Contact& c) const;
+        // Other contacts with the same email (SHOULD). A linear scan is fine at this size.
+    std::vector<Warning> sameEmailWarnings(const Contact& c) const;
+
+    // All warnings for a contact: same name first, then same email.
+    std::vector<Warning> warningsFor(const Contact& c) const;
 };
