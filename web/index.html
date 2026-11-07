@@ -3,9 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Contacts App</title>
 
     <link rel="stylesheet" href="style.css">
@@ -15,178 +13,93 @@
 
     <div class="container">
 
-        <!-- Header -->
-        <header class="header">
-
-            <div class="header-content">
-
-                <h1>Contacts App</h1>
-
-                <p>Manage your contacts easily</p>
-
-            </div>
-
+        <header>
+            <h1>Contacts App</h1>
+            <p>Manage your contacts easily</p>
         </header>
 
-
-        <!-- Search and Add -->
-        <section class="toolbar">
+        <section class="search-section">
 
             <input
                 type="text"
                 id="search"
-                placeholder="Search contacts by name or phone..."
-                autocomplete="off"
+                placeholder="Search contacts..."
             >
 
-            <button id="addContact" class="primary-btn">
-                + Add Contact
-            </button>
+            <button id="addContact">Add Contact</button>
 
         </section>
 
+        <p id="message"></p>
 
-        <!-- Messages -->
-        <div
-            id="app-message"
-            role="status"
-            aria-live="polite"
-        ></div>
+        <section id="formSection" class="form-section hidden">
 
+            <h2 id="formTitle">Add New Contact</h2>
 
-        <!-- Contacts -->
-        <section class="contacts-section">
+            <form id="contactForm">
 
-            <div class="section-heading">
+                <input type="hidden" id="contactId">
 
-                <h2>My Contacts</h2>
+                <label for="name">Name</label>
+                <input
+                    type="text"
+                    id="name"
+                    placeholder="Enter name"
+                    required
+                >
 
-            </div>
+                <label for="phone">Phone Number</label>
+                <input
+                    type="text"
+                    id="phone"
+                    placeholder="Enter phone number"
+                    required
+                >
 
+                <label for="email">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter email"
+                >
 
-            <div id="contacts-container">
+                <label for="address">Address</label>
+                <textarea
+                    id="address"
+                    placeholder="Enter address"
+                    rows="3"
+                ></textarea>
 
-                <p class="loading">
-                    Loading contacts...
-                </p>
+                <div class="form-buttons">
 
-            </div>
+                    <button type="submit" id="saveButton">
+                        Save Contact
+                    </button>
 
-        </section>
-
-
-        <!-- Add/Edit Dialog -->
-        <dialog id="contactDialog">
-
-            <div class="dialog-content">
-
-                <div class="dialog-header">
-
-                    <h2 id="dialogTitle">
-                        Add Contact
-                    </h2>
-
-                    <button
-                        type="button"
-                        id="closeDialog"
-                        class="close-btn"
-                        aria-label="Close dialog"
-                    >
-                        &times;
+                    <button type="button" id="cancelButton">
+                        Cancel
                     </button>
 
                 </div>
 
+            </form>
 
-                <!-- Contact Form -->
-                <form id="contactForm">
+        </section>
 
-                    <input
-                        type="hidden"
-                        id="contactId"
-                    >
+        <section class="contacts-section">
 
+            <h2>Your Contacts</h2>
 
-                    <label for="name">
-                        Full Name *
-                    </label>
-
-                    <input
-                        type="text"
-                        id="name"
-                        placeholder="Enter full name"
-                        required
-                    >
-
-
-                    <label for="phone">
-                        Phone Number *
-                    </label>
-
-                    <input
-                        type="tel"
-                        id="phone"
-                        placeholder="Enter phone number"
-                        required
-                    >
-
-
-                    <label for="email">
-                        Email Address
-                    </label>
-
-                    <input
-                        type="email"
-                        id="email"
-                        placeholder="Enter email address"
-                    >
-
-
-                    <label for="address">
-                        Address
-                    </label>
-
-                    <textarea
-                        id="address"
-                        placeholder="Enter address"
-                        rows="3"
-                    ></textarea>
-
-
-                    <div class="form-buttons">
-
-                        <button
-                            type="submit"
-                            id="saveContact"
-                            class="primary-btn"
-                        >
-                            Save Contact
-                        </button>
-
-
-                        <button
-                            type="button"
-                            id="cancelContact"
-                            class="secondary-btn"
-                        >
-                            Cancel
-                        </button>
-
-                    </div>
-
-                </form>
-
+            <div id="contactsList">
+                <p>Loading contacts...</p>
             </div>
 
-        </dialog>
+        </section>
 
     </div>
 
-
-    <!-- JavaScript -->
-
+    <!-- Load API before app.js -->
     <script src="api.js"></script>
-
     <script src="app.js"></script>
 
 </body>
