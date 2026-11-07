@@ -291,6 +291,7 @@ int main() {
         // Empty emails never warn
         OpResult none = book.add(make("No Email", "9111111111"));
         assert(none.warnings.empty());
-    }
+    } 
+    
     std::cout << "ALL PASSED\n";
 }
