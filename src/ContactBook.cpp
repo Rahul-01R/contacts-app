@@ -370,3 +370,84 @@ BookStats ContactBook::stats() const {
     s.resizes = phoneIndex_.resizes();
     return s;
 }
+bool ContactBook::verifyIndexes(std::string* whyNot) const {
+    // Small helper: store the reason (if the caller wants it) and return false.
+    auto fail = [&](const std::string& why) {
+        if (whyNot != nullptr) {
+            *whyNot = why;
+        }
+        return false;
+    };
+
+    // Rule 2: both indexes and the main storage have the same number of contacts.
+    if (phoneIndex_.size() != byId_.size()) {
+        return fail("phoneIndex_ has " + std::to_string(phoneIndex_.size()) +
+                    " entries but byId_ has " + std::to_string(byId_.size()));
+    }
+
+    // Rules 1 and 3: walk every contact and check what the indexes say about it.
+    for (const auto& pair : byId_) {
+        const Contact& c = pair.second;
+
+        // Rule 1: the phone key points back to this contact.
+        std::string key = phoneKey(c.phone);
+        const int* owner = phoneIndex_.find(key);
+        if (owner == nullptr) {
+            return fail("contact " + std::to_string(c.id) +
+                        " has phone key " + key + " missing from phoneIndex_");
+        }
+        if (*owner != c.id) {
+            return fail("phone key " + key + " points to id " +
+                        std::to_string(*owner) + " but belongs to id " +
+                        std::to_string(c.id));
+        }
+
+        // Rule 3: every name word lists this id exactly once.
+        for (const std::string& word : splitWords(c.name)) {
+            const std::vector<int>* ids = nameIndex_.find(word);
+            if (ids == nullptr) {
+                return fail("contact " + std::to_string(c.id) +
+                            ": word '" + word + "' is missing from nameIndex_");
+            }
+            int times = static_cast<int>(std::count(ids->begin(), ids->end(), c.id));
+            if (times != 1) {
+                return fail("word '" + word + "' lists id " + std::to_string(c.id) +
+                            " " + std::to_string(times) + " times (should be 1)");
+            }
+        }
+    }
+
+    // Rule 4: nothing in nameIndex_ mentions a contact that does not exist.
+    // forEach cannot "return false" for us, so the lambda records the first problem.
+    std::string problem;
+    nameIndex_.forEach([&](const std::string& word, const std::vector<int>& ids) {
+        if (!problem.empty()) {
+            return;                                   // already found one, skip the rest
+        }
+        if (ids.empty()) {
+            problem = "word '" + word + "' has an empty id list (it should be erased)";
+            return;
+        }
+        for (int id : ids) {
+            auto it = byId_.find(id);
+            if (it == byId_.end()) {
+                problem = "word '" + word + "' lists id " + std::to_string(id) +
+                          " which does not exist";
+                return;
+            }
+            // Stricter check: the word must really be in that contact's name,
+            // otherwise an edit left an old word behind.
+            std::vector<std::string> words = splitWords(it->second.name);
+            if (std::find(words.begin(), words.end(), word) == words.end()) {
+                problem = "word '" + word + "' lists id " + std::to_string(id) +
+                          " but that contact's name has no such word";
+                return;
+            }
+        }
+    });
+    if (!problem.empty()) {
+        return fail(problem);
+    }
+
+    return true;
+}
