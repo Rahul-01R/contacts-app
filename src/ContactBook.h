@@ -39,6 +39,9 @@ public:
     std::vector<Contact> searchExact(const std::string& q) const;
     std::vector<Contact> candidatesForFuzzy(const std::string& q) const;
     BookStats stats() const;
+    // Checks that byId_, phoneIndex_ and nameIndex_ describe the same contacts.
+    // Returns false and (if whyNot is not null) writes a sentence saying what is wrong.
+    bool verifyIndexes(std::string* whyNot = nullptr) const;
 
 private:
     // The three structures. They must always describe the same set of contacts.
