@@ -1,16 +1,10 @@
-#ifndef CONTACT_H
-#define CONTACT_H
-
-#include <iostream>
+#pragma once
 #include <string>
-using namespace std;
 
-struct Contact
-{
-    string name;
-    string phone;
-    string email;
-    string address;
+struct Contact {
+    int id = 0;
+    std::string name;
+    std::string phone;   // as the user typed it
+    std::string email;
+    std::string address;
 };
-
-#endif
