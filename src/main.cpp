@@ -57,6 +57,18 @@ int main() {
             sendJson(res, 400, {{"error", "bad_json"}, {"message", "Request body must be a JSON object"}});
             return;
         }
+         if (!body.contains("name") || !body.contains("phone")) {
+            sendJson(res, 400, {{"error", "validation_failed"}, {"message", "Name and phone are required."}});
+            return;
+        }
+        if (body["name"].get<std::string>().empty()) {
+            sendJson(res, 400, {{"error", "validation_failed"}, {"message", "Name cannot be empty."}});
+            return;
+        }
+        if (body["phone"].get<std::string>().length() < 10) {
+            sendJson(res, 400, {{"error", "validation_failed"}, {"message", "Phone number is too short."}});
+            return;
+        }
         Contact in;
         try { in = body.get<Contact>(); }
         catch (const json::exception&) {
@@ -132,9 +144,57 @@ int main() {
         }
         std::string q = req.get_param_value("q");
         
+        // Grab pagination params from the URL, or use defaults (start at 0, max 50)
+        int limit = req.has_param("limit") ? std::stoi(req.get_param_value("limit")) : 50;
+        int offset = req.has_param("offset") ? std::stoi(req.get_param_value("offset")) : 0;
+        
         std::lock_guard<std::mutex> lock(bookMutex);
-        json j = book.searchExact(q);
-        sendJson(res, 200, j);
+        auto results = book.searchExact(q);
+        
+        json jsonArray = json::array();
+        // Only return the specific slice of contacts requested
+        for (int i = offset; i < (int)results.size() && i < offset + limit; ++i) {
+            jsonArray.push_back(results[i]);
+        }
+        
+        sendJson(res, 200, jsonArray);
+    });
+    svr.Get("/api/stats", [&](const httplib::Request& req, httplib::Response& res) {
+        (void)req;
+        std::lock_guard<std::mutex> lock(bookMutex);
+        
+        // Manually convert the BookStats struct into a JSON object
+        BookStats s = book.stats();
+        json jStats = {
+            {"contacts", s.contacts},
+            {"capacity", s.capacity},
+            {"loadFactor", s.loadFactor},
+            {"longestChain", s.longestChain},
+            {"resizes", s.resizes}
+        };
+        sendJson(res, 200, jStats);
+    });
+
+    svr.Get("/api/fuzzy", [&](const httplib::Request& req, httplib::Response& res) {
+        if (!req.has_param("q")) {
+            sendJson(res, 400, {{"error", "bad_request"}, {"message", "Missing query parameter 'q'"}});
+            return;
+        }
+        std::string q = req.get_param_value("q");
+        
+        std::lock_guard<std::mutex> lock(bookMutex);
+        
+        // Use the exact function name from ContactBook.h
+        auto results = book.candidatesForFuzzy(q); 
+        
+        json jsonArray = json::array();
+        for (const auto& contact : results) {
+            json jC = contact;           
+            // Keep the frontend happy with a dummy score since the header doesn't return one
+            jC["score"] = 100; 
+            jsonArray.push_back(jC);
+        }
+        sendJson(res, 200, jsonArray);
     });
 
     // Request Logger
@@ -148,6 +208,7 @@ int main() {
             loaded = loadContacts("data/sample_contacts.json");
         }
         book.loadAll(loaded);
+        svr.set_payload_max_length(100 * 1024);
         svr.listen("127.0.0.1", 8080);
         return 0;
     }
