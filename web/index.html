@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts App</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+            <h1>Contacts App</h1>
+            <p>Manage your contacts easily</p>
+        </header>
+
+        <section class="search-section">
+
+            <input
+                type="text"
+                id="search"
+                placeholder="Search contacts..."
+            >
+
+            <button id="addContact">Add Contact</button>
+
+        </section>
+
+        <p id="message"></p>
+
+        <section id="formSection" class="form-section hidden">
+
+            <h2 id="formTitle">Add New Contact</h2>
+
+            <form id="contactForm">
+
+                <input type="hidden" id="contactId">
+
+                <label for="name">Name</label>
+                <input
+                    type="text"
+                    id="name"
+                    placeholder="Enter name"
+                    required
+                >
+
+                <label for="phone">Phone Number</label>
+                <input
+                    type="text"
+                    id="phone"
+                    placeholder="Enter phone number"
+                    required
+                >
+
+                <label for="email">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter email"
+                >
+
+                <label for="address">Address</label>
+                <textarea
+                    id="address"
+                    placeholder="Enter address"
+                    rows="3"
+                ></textarea>
+
+                <div class="form-buttons">
+
+                    <button type="submit" id="saveButton">
+                        Save Contact
+                    </button>
+
+                    <button type="button" id="cancelButton">
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+        <section class="contacts-section">
+
+            <h2>Your Contacts</h2>
+
+            <div id="contactsList">
+                <p>Loading contacts...</p>
+            </div>
+
+        </section>
+
+    </div>
+
+    <!-- Load API before app.js -->
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>

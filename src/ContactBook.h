@@ -1,8 +1,10 @@
 #pragma once
 #include <cstddef>
+#include <map>
 #include <string>
 #include <vector>
 #include "Contact.h"
+#include "HashTable.h"
 
 struct Warning {                   // saved, but the user should know
     std::string type;              // "same_name" or "same_email"
@@ -37,7 +39,33 @@ public:
     std::vector<Contact> searchExact(const std::string& q) const;
     std::vector<Contact> candidatesForFuzzy(const std::string& q) const;
     BookStats stats() const;
+    // Checks that byId_, phoneIndex_ and nameIndex_ describe the same contacts.
+    // Returns false and (if whyNot is not null) writes a sentence saying what is wrong.
+    bool verifyIndexes(std::string* whyNot = nullptr) const;
 
 private:
-    // Day 4: the real data structures go here.
+    // The three structures. They must always describe the same set of contacts.
+    std::map<int, Contact> byId_;               // id -> contact
+    HashTable<int> phoneIndex_;                 // phone key -> contact id
+    HashTable<std::vector<int>> nameIndex_;     // lowercase word -> contact ids
+    int nextId_ = 1;
+
+    // Checks the fields in order: name, phone, email, address.
+    // Returns true if all are fine. Otherwise fills err (INVALID) and returns false.
+    bool validate(const Contact& in, OpResult& err) const;
+
+    // Puts a ready-to-store contact into all three structures.
+    void store(const Contact& c);
+
+    // Name-index helpers: add or remove this contact's id under each name word.
+    void addNameWords(const Contact& c);
+    void removeNameWords(const Contact& c);
+
+    // Other contacts with the same name (ignoring capitals and extra spaces).
+    std::vector<Warning> sameNameWarnings(const Contact& c) const;
+        // Other contacts with the same email (SHOULD). A linear scan is fine at this size.
+    std::vector<Warning> sameEmailWarnings(const Contact& c) const;
+
+    // All warnings for a contact: same name first, then same email.
+    std::vector<Warning> warningsFor(const Contact& c) const;
 };

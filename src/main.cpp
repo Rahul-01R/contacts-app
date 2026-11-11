@@ -11,7 +11,15 @@ using json = nlohmann::json;
 inline void to_json(nlohmann::json& j, const Warning& w) {
     j = nlohmann::json{{"type", w.type}, {"other", w.other}};
 }
-
+inline void to_json(nlohmann::json& j, const BookStats& s) {
+    j = nlohmann::json{
+        {"contacts", s.contacts},
+        {"capacity", s.capacity},
+        {"loadFactor", s.loadFactor},
+        {"longestChain", s.longestChain},
+        {"resizes", s.resizes}
+    };
+}
 void sendJson(httplib::Response& res, int status, const json& j) {
     res.status = status;
     res.set_content(j.dump(), "application/json");
@@ -50,6 +58,32 @@ int main() {
         std::lock_guard<std::mutex> lock(bookMutex);
         json j = book.listAll();
         sendJson(res, 200, j);
+    });
+    // 1. The Stats Route
+    svr.Get("/api/stats", [&](const httplib::Request& req, httplib::Response& res) {
+        std::lock_guard<std::mutex> lock(bookMutex);
+        sendJson(res, 200, book.stats());
+    });
+
+    // 2. The Placeholder Fuzzy Route
+    svr.Get("/api/fuzzy", [&](const httplib::Request& req, httplib::Response& res) {
+        if (!req.has_param("q")) {
+            sendJson(res, 400, {{"error", "bad_request"}, {"message", "Missing query parameter 'q'"}});
+            return;
+        }
+        std::string q = req.get_param_value("q");
+        
+        std::lock_guard<std::mutex> lock(bookMutex);
+        auto candidates = book.candidatesForFuzzy(q);
+        
+        json result = json::array();
+        for (const auto& c : candidates) {
+            json jC = c;           
+            jC["score"] = 0;       
+            result.push_back(jC);
+        }
+        
+        sendJson(res, 200, result);
     });
     svr.Post("/api/contacts", [&](const httplib::Request& req, httplib::Response& res) {
         json body = json::parse(req.body, nullptr, false);
@@ -208,7 +242,8 @@ int main() {
             loaded = loadContacts("data/sample_contacts.json");
         }
         book.loadAll(loaded);
-        svr.set_payload_max_length(100 * 1024);
+        svr.set_payload_max_length(100 * 1024); // Limits body to 100 KB
         svr.listen("127.0.0.1", 8080);
+
         return 0;
     }
