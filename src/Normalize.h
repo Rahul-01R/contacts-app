@@ -24,3 +24,7 @@ std::string normalizeName(const std::string& name);
 // Empty is fine. Otherwise: no spaces, exactly one @, text before it,
 // a dot with text on both sides after it, at most 100 characters.
 bool validEmail(const std::string& email);
+// Pads the word with '#' at both ends and returns every pair of neighbouring
+// characters. "john" -> #j, jo, oh, hn, n#. An empty word gives no bigrams.
+// Repeated pairs are kept; the index removes repeats when it stores them.
+std::vector<std::string> paddedBigrams(const std::string& word);

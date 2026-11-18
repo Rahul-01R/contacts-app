@@ -42,5 +42,36 @@ int main() {
     assert(!validEmail("a b@c.com"));
     assert(!validEmail("a@@b.com"));
 
+        // paddedBigrams
+    {
+        std::vector<std::string> j = paddedBigrams("john");
+        assert(j.size() == 5);
+        assert(j[0] == "#j");
+        assert(j[1] == "jo");
+        assert(j[2] == "oh");
+        assert(j[3] == "hn");
+        assert(j[4] == "n#");
+
+        std::vector<std::string> a = paddedBigrams("a");
+        assert(a.size() == 2);
+        assert(a[0] == "#a");
+        assert(a[1] == "a#");
+
+        assert(paddedBigrams("").empty());
+        assert(paddedBigrams("aaaa").size() == 5);   // repeats are kept
+
+        // john and jhon share exactly two bigrams: #j and n#
+        std::vector<std::string> x = paddedBigrams("john");
+        std::vector<std::string> y = paddedBigrams("jhon");
+        int shared = 0;
+        for (const std::string& b : x) {
+            for (const std::string& c : y) {
+                if (b == c) {
+                    shared++;
+                }
+            }
+        }
+        assert(shared == 2);
+    }
     std::cout << "ALL PASSED\n";
 }

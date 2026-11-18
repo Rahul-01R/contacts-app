@@ -127,3 +127,15 @@ bool validEmail(const std::string& email) {
     }
     return false;
 }
+std::vector<std::string> paddedBigrams(const std::string& word) {
+    std::vector<std::string> result;
+    if (word.empty()) {
+        return result;
+    }
+
+    std::string padded = "#" + word + "#";
+    for (std::size_t i = 0; i + 1 < padded.size(); i++) {
+        result.push_back(padded.substr(i, 2));   // two characters starting at i
+    }
+    return result;
+}
